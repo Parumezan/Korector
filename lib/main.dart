@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:html';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(const Korector());
@@ -33,14 +33,12 @@ class _HomePageState extends State<HomePage> {
         // print("Empty String to correct\n");
         return;
       }
-      HttpRequest.request(
-        "https://orthographe.reverso.net/api/v1/Spelling/",
-        method: "POST",
-        responseType: "json",
-        requestHeaders: {
+      http.post(
+        Uri.parse("https://orthographe.reverso.net/api/v1/Spelling/"),
+        headers: {
           "Content-Type": "application/json",
         },
-        sendData: json.encode({
+        body: json.encode({
           "englishDialect": "indifferent",
           "autoReplace": true,
           "getCorrectionDetails": true,
@@ -55,15 +53,16 @@ class _HomePageState extends State<HomePage> {
           },
           "origin": "interactive"
         }),
-      ).then((HttpRequest request) {
-        if (request.response.isEmpty) {
+      ).then((http.Response response) {
+        if (response.body.isEmpty) {
           // print("Error: Request failed\n");
           return;
         }
-        correctText = request.response["text"];
+        correctText = jsonDecode(response.body)["text"];
         setState(() {
           fieldText = correctText;
         });
+        Clipboard.setData(ClipboardData(text: correctText));
       });
     });
   }
